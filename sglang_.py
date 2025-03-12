@@ -1,7 +1,7 @@
 import os
 
-os.environ['HTTP_PROXY'] = 'http://127.0.0.1:7890'
-os.environ['HTTPS_PROXY'] = 'http://127.0.0.1:7890'
+os.environ['HTTP_PROXY'] = 'http://127.0.0.1:12138'
+os.environ['HTTPS_PROXY'] = 'http://127.0.0.1:12138'
 
 import sglang as sgl
 from sglang.utils import print_highlight
