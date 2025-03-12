@@ -4,16 +4,31 @@ os.environ['HTTP_PROXY'] = 'http://127.0.0.1:7890'
 os.environ['HTTPS_PROXY'] = 'http://127.0.0.1:7890'
 
 import sglang as sgl
+from sglang.utils import print_highlight
 
 
 @sgl.function
 def multi_turn_question(s, question_1, question_2):
     s += sgl.system("You are a helpful assistant.")
     s += sgl.user(question_1)
-    s += sgl.assistant(sgl.gen("answer_1", max_tokens=256))
+    s += sgl.assistant(sgl.gen("answer_11", max_tokens=256))
     s += sgl.user(question_2)
     s += sgl.assistant(sgl.gen("answer_2", max_tokens=256))
 
+@sgl.function
+def tool_use(s, question):
+    s += sgl.assistant(
+        "To answer this question: "
+        + question
+        + ". I need to use a "
+        + sgl.gen("tool", choices=["calculator", "search engine"])
+        + ". "
+    )
+
+    if s["tool"] == "calculator":
+        s += sgl.assistant("The math expression is: " + sgl.gen("expression"))
+    elif s["tool"] == "search engine":
+        s += sgl.assistant("The key word to search is: " + sgl.gen("word"))
 
 def single():
     state = multi_turn_question.run(
@@ -24,7 +39,6 @@ def single():
     for m in state.messages():
         print(m["role"], ":", m["content"])
 
-    print("\n-- answer_1 --\n", state["answer_1"])
 
 
 def stream():
@@ -59,9 +73,9 @@ def batch():
 
 if __name__ == "__main__":
     backend = sgl.OpenAI(
-        model_name="deepseek-chat",
-        base_url="https://api.deepseek.com",
-        api_key="sk-706fac1ec7114d97bb6d4cc547954ade",
+        model_name="deepseek-v3",
+        base_url="http://deepseek.wanjiedata.com/v1",
+        api_key=" Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE3NzMxMjEzNzcsImtleSI6IjVLNzVaOFROQzlGNEhNMzdQOVk3In0.zOZx4Lo0Sod6fiNuYf59oRIeP9zYIZBtccJUR4fnxOA",
     )
     sgl.set_default_backend(backend)
 
@@ -69,10 +83,12 @@ if __name__ == "__main__":
     print("\n========== single ==========\n")
     single()
 
-    # Stream output
-    print("\n========== stream ==========\n")
-    stream()
-
+    # # Stream output
+    # print("\n========== stream ==========\n")
+    # stream()
+    #
     # Run a batch of requests
-    print("\n========== batch ==========\n")
-    batch()
+    # print("\n========== cal ==========\n")
+    # state = tool_use("What is 2 * 2?")
+    # for s in state:
+    #     print(s.messages())
