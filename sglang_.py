@@ -77,6 +77,11 @@ if __name__ == "__main__":
         base_url="http://deepseek.wanjiedata.com/v1",
         api_key=" Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE3NzMxMjEzNzcsImtleSI6IjVLNzVaOFROQzlGNEhNMzdQOVk3In0.zOZx4Lo0Sod6fiNuYf59oRIeP9zYIZBtccJUR4fnxOA",
     )
+    backend = sgl.OpenAI(
+        model_name="deepseek-chat",
+        base_url="https://api.deepseek.com/v1",
+        api_key="sk-706fac1ec7114d97bb6d4cc547954ade",
+    )
     sgl.set_default_backend(backend)
 
     # Run a single request
