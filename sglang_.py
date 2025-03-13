@@ -1,7 +1,7 @@
 import os
 
-os.environ['HTTP_PROXY'] = 'http://127.0.0.1:12138'
-os.environ['HTTPS_PROXY'] = 'http://127.0.0.1:12138'
+# os.environ['HTTP_PROXY'] = 'http://127.0.0.1:8888'
+# os.environ['HTTPS_PROXY'] = 'http://127.0.0.1:8888'
 
 import sglang as sgl
 from sglang.utils import print_highlight
@@ -11,9 +11,9 @@ from sglang.utils import print_highlight
 def multi_turn_question(s, question_1, question_2):
     s += sgl.system("You are a helpful assistant.")
     s += sgl.user(question_1)
-    s += sgl.assistant(sgl.gen("answer_11", max_tokens=256))
+    s += sgl.assistant(sgl.gen("answer_11", max_tokens=1024, temperature=0))
     s += sgl.user(question_2)
-    s += sgl.assistant(sgl.gen("answer_2", max_tokens=256))
+    s += sgl.assistant(sgl.gen("answer_2", max_tokens=1024, temperature=0))
 
 @sgl.function
 def tool_use(s, question):
@@ -32,8 +32,8 @@ def tool_use(s, question):
 
 def single():
     state = multi_turn_question.run(
-        question_1="What is the capital of the United States?",
-        question_2="List two local attractions.",
+        question_1="中国的首都在哪?",
+        question_2="列出两个中国的节日",
     )
 
     for m in state.messages():
@@ -73,24 +73,19 @@ def batch():
 
 if __name__ == "__main__":
     backend = sgl.OpenAI(
-        model_name="deepseek-v3",
-        base_url="http://deepseek.wanjiedata.com/v1",
-        api_key=" Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE3NzMxMjEzNzcsImtleSI6IjVLNzVaOFROQzlGNEhNMzdQOVk3In0.zOZx4Lo0Sod6fiNuYf59oRIeP9zYIZBtccJUR4fnxOA",
-    )
-    backend = sgl.OpenAI(
-        model_name="deepseek-chat",
-        base_url="https://api.deepseek.com/v1",
-        api_key="sk-706fac1ec7114d97bb6d4cc547954ade",
+        model_name="default",
+        base_url="http://122.191.109.151:1094/v1",
+        api_key="empty",
     )
     sgl.set_default_backend(backend)
 
     # Run a single request
-    print("\n========== single ==========\n")
-    single()
+    # print("\n========== single ==========\n")
+    # single()
 
-    # # Stream output
-    # print("\n========== stream ==========\n")
-    # stream()
+    # Stream output
+    print("\n========== batch ==========\n")
+    batch()
     #
     # Run a batch of requests
     # print("\n========== cal ==========\n")
