@@ -1,3 +1,10 @@
+import json
+import asyncio
+import aiohttp
+import os
+from bert_score import score
+
+# 系统提示词
 system_prompt = """You are an AI assistant trained to provide precise, concise, and well-formatted answers based on the type of question asked. Follow these rules:
 
 1. **For factual, mathematical, and logical reasoning questions**:
@@ -33,82 +40,65 @@ system_prompt = """You are an AI assistant trained to provide precise, concise, 
    - Always use clear and formatted output.
    - If a question expects a list, format the answer as a list.
 """
-import json
-import asyncio
-import aiohttp
-import os
-import re
-from nltk.translate.bleu_score import sentence_bleu
-from Levenshtein import distance as levenshtein_distance
-from bert_score import score
 
-# os.environ['HTTP_PROXY'] = 'http://127.0.0.1:7890'
-# os.environ['HTTPS_PROXY'] = 'http://127.0.0.1:7890'
-
-# ✅ API 配置
+# API 配置
 API_URL = "https://api.deepseek.com/v1/chat/completions"
 API_KEY = "sk-f267b40f68fe47fbba06d9534b988214"
 
-# ✅ 读取数据集
-dataset_path = "./evaluation_dataset.json"
-with open(dataset_path, "r", encoding="utf-8") as f:
-    dataset = json.load(f)
+# 读取数据集
+def load_dataset(path, limit=None):
+    """加载数据集并可选择限制样本数量"""
+    with open(path, "r", encoding="utf-8") as f:
+        dataset = json.load(f)
+    
+    if limit and limit > 0:
+        dataset = dataset[:limit]
+    
+    return dataset
 
-dataset = dataset[:10]  # 仅取前 100 条数据进行测试
-
-# ✅ 提取期望答案（支持多答案）
+# 提取期望答案
 def extract_expected_answers(expected):
+    """提取期望答案，支持多种格式"""
     if isinstance(expected, dict) and "text" in expected:
         return expected["text"]
     elif isinstance(expected, list):
         return expected
     return [str(expected)]
 
-# ✅ 计算 Jaccard 相似度
-def jaccard_similarity(pred, expected):
-    """计算 Jaccard 相似度（词级匹配）"""
-    pred_set = set(pred.split())
-    expected_set = set(expected.split())
-    intersection = len(pred_set & expected_set)
-    union = len(pred_set | expected_set)
-    return intersection / union if union != 0 else 0
-
-# ✅ 计算 Levenshtein 相似度
-def normalized_levenshtein(pred, expected):
-    """计算归一化的 Levenshtein 距离"""
-    dist = levenshtein_distance(pred, expected)
-    max_len = max(len(pred), len(expected))
-    return 1 - (dist / max_len)  # 归一化到 0-1
-
-# ✅ 计算 BERTScore（可选，如果有 GPU）
+# 计算BERTScore
 def compute_bertscore(pred, expected):
-    """计算 BERTScore 语义匹配分数"""
+    """计算BERTScore语义匹配分数"""
     try:
-        P, R, F1 = score([pred], [expected], lang="zh", rescale_with_baseline=True)
-        return F1.item()  # 返回 F1 分数
+        # 确保输入是列表格式
+        if not isinstance(pred, list):
+            pred = [pred]
+        if not isinstance(expected, list):
+            expected = [expected]
+        
+        # 计算BERTScore
+        P, R, F1 = score(pred, expected, model_type="bert-base-uncased", verbose=False)
+        
+        # 返回F1分数（通常被视为BERTScore的主要指标）
+        return F1.mean().item()
     except Exception as e:
-        print(f"❌ BERTScore 计算失败: {e}")
-        return 0  # 避免错误
+        print(f"❌ BERTScore计算失败: {e}")
+        return 0
 
-# ✅ 评估模型输出
+# 评估模型输出
 def evaluate_answer(pred, expected):
+    """使用BERTScore评估模型输出与期望答案的匹配度"""
     possible_answers = extract_expected_answers(expected)
-    pred_clean = pred.strip().lower()
+    pred_clean = pred.strip()
+    
+    # 计算与所有可能答案的BERTScore，取最高值
+    bert_scores = [compute_bertscore(pred_clean, ans) for ans in possible_answers]
+    final_score = max(bert_scores) if bert_scores else 0
+    
+    return round(final_score, 4)
 
-    # 计算多个 `possible_answers` 的评分，取最高值
-    jaccard_score = max(jaccard_similarity(pred_clean, ans.lower()) for ans in possible_answers)
-    print(f"Jaccard score: {jaccard_score}")
-    levenshtein_score = max(normalized_levenshtein(pred_clean, ans.lower()) for ans in possible_answers)
-    print(f"Levenshtein score: {levenshtein_score}")
-    bert_score = max(compute_bertscore(pred_clean, ans) for ans in possible_answers)
-    print(f"BERT score: {bert_score}")
-
-    # 计算最终得分（加权）
-    final_score = round((jaccard_score * 0.4 + levenshtein_score * 0.4 + bert_score * 0.2), 4)
-    return final_score
-
-# ✅ 异步请求函数
+# 异步请求函数
 async def query_model(session, question):
+    """向API发送请求获取模型回答"""
     headers = {
         "Content-Type": "application/json",
         "Authorization": f"Bearer {API_KEY}"
@@ -116,56 +106,99 @@ async def query_model(session, question):
     payload = {
         "model": "deepseek-chat",
         "messages": [
-            {"role": "system", "content": "You are an AI assistant trained to provide precise and concise answers."},
+            {"role": "system", "content": system_prompt},
             {"role": "user", "content": question}
         ],
         "max_tokens": 256
     }
-    async with session.post(API_URL, json=payload, headers=headers) as response:
-        try:
-            result = await response.json()
-            return result.get("choices", [{}])[0].get("message", {}).get("content", "").strip() or "No response"
-        except Exception as e:
-            print(f"❌ API 请求错误: {e}")
-            return "Error"
+    
+    try:
+        async with session.post(API_URL, json=payload, headers=headers) as response:
+            if response.status == 200:
+                result = await response.json()
+                return result.get("choices", [{}])[0].get("message", {}).get("content", "").strip()
+            else:
+                error_text = await response.text()
+                print(f"❌ API请求失败 (状态码: {response.status}): {error_text}")
+                return f"Error: API请求失败 (状态码: {response.status})"
+    except Exception as e:
+        print(f"❌ API请求异常: {e}")
+        return f"Error: {str(e)}"
 
-# ✅ 运行并发评估
-async def run_evaluation():
+# 运行评估
+async def run_evaluation(dataset_path, limit=None, output_prefix="evaluation"):
+    """运行评估流程"""
+    print(f"📊 开始评估流程...")
+    
+    # 加载数据集
+    dataset = load_dataset(dataset_path, limit)
+    print(f"✅ 已加载数据集，共{len(dataset)}个样本")
+    
     results = []
+    total_score = 0
+    
+    # 创建HTTP会话
     async with aiohttp.ClientSession() as session:
-        tasks = [asyncio.create_task(query_model(session, sample["question"])) for sample in dataset]
-        responses = await asyncio.gather(*tasks)
-
-        # 处理评测结果
-        for sample, response in zip(dataset, responses):
-            question = sample["question"]
-            expected_answer = sample["expected_answer"]
-            final_score = evaluate_answer(response, expected_answer)
-
-            results.append({
-                "id": sample["id"],
-                "question": question,
-                "expected_answer": expected_answer,
-                "model_response": response,
-                "final_score": final_score
-            })
-
-    # ✅ 计算整体评分
-    final_scores = [r["final_score"] for r in results]
-    overall_score = {
-        "total_questions": len(results),
-        "average_final_score": round(sum(final_scores) / len(final_scores), 4)
+        # 创建并发任务
+        tasks = []
+        for sample in dataset:
+            task = asyncio.create_task(query_model(session, sample["question"]))
+            tasks.append((sample, task))
+        
+        # 处理结果
+        for i, (sample, task) in enumerate(tasks):
+            try:
+                print(f"⏳ 处理样本 {i+1}/{len(tasks)}...")
+                response = await task
+                
+                # 评估回答
+                score = evaluate_answer(response, sample["expected_answer"])
+                total_score += score
+                
+                # 记录结果
+                results.append({
+                    "id": sample.get("id", i+1),
+                    "question": sample["question"],
+                    "expected_answer": sample["expected_answer"],
+                    "model_response": response,
+                    "bert_score": score
+                })
+                
+                print(f"✅ 样本 {i+1} 评分: {score:.4f}")
+            except Exception as e:
+                print(f"❌ 处理样本 {i+1} 时出错: {e}")
+    
+    # 计算平均分数
+    avg_score = total_score / len(results) if results else 0
+    
+    # 创建总结报告
+    summary = {
+        "total_samples": len(results),
+        "average_bert_score": round(avg_score, 4),
+        "evaluation_time": "完成"
     }
-
-    # ✅ 保存结果
-    with open("evaluation_results.json", "w", encoding="utf-8") as f:
+    
+    # 保存结果
+    results_file = f"{output_prefix}_results.json"
+    summary_file = f"{output_prefix}_summary.json"
+    
+    with open(results_file, "w", encoding="utf-8") as f:
         json.dump(results, f, indent=4, ensure_ascii=False)
+    
+    with open(summary_file, "w", encoding="utf-8") as f:
+        json.dump(summary, f, indent=4, ensure_ascii=False)
+    
+    print(f"✅ 评估完成！")
+    print(f"📊 平均BERTScore: {avg_score:.4f}")
+    print(f"📄 详细结果已保存至: {results_file}")
+    print(f"📄 评估摘要已保存至: {summary_file}")
 
-    with open("evaluation_summary.json", "w", encoding="utf-8") as f:
-        json.dump(overall_score, f, indent=4, ensure_ascii=False)
-
-    print(f"✅ 评估完成！详细结果保存在 `evaluation_results.json`，综合评分保存在 `evaluation_summary.json`")
-
-# ✅ 运行评估
-asyncio.run(run_evaluation())
+# 主函数
+if __name__ == "__main__":
+    # 配置参数
+    dataset_path = "./evaluation_dataset.json"
+    sample_limit = 10  # 设置为None可评估整个数据集
+    
+    # 运行评估
+    asyncio.run(run_evaluation(dataset_path, sample_limit))
 
