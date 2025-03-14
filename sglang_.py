@@ -1,7 +1,7 @@
 import os
 
-# os.environ['HTTP_PROXY'] = 'http://127.0.0.1:8888'
-# os.environ['HTTPS_PROXY'] = 'http://127.0.0.1:8888'
+os.environ['HTTP_PROXY'] = 'http://127.0.0.1:7890'
+os.environ['HTTPS_PROXY'] = 'http://127.0.0.1:7890'
 
 import sglang as sgl
 from sglang.utils import print_highlight
@@ -73,9 +73,9 @@ def batch():
 
 if __name__ == "__main__":
     backend = sgl.OpenAI(
-        model_name="default",
-        base_url="http://122.191.109.151:1094/v1",
-        api_key="empty",
+        model_name="deepseek-chat",
+        base_url="https://api.deepseek.com/v1/",
+        api_key="sk-f267b40f68fe47fbba06d9534b988214",
     )
     sgl.set_default_backend(backend)
 
