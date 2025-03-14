@@ -42,7 +42,7 @@ system_prompt = """You are an AI assistant trained to provide precise, concise, 
 """
 
 # API 配置
-API_URL = "https://api.deepseek.com/v1/chat/completions"
+API_URL = "http://122.191.109.151:1112/v1/chat/completions"
 API_KEY = "sk-f267b40f68fe47fbba06d9534b988214"
 
 # 读取数据集
@@ -197,7 +197,7 @@ async def run_evaluation(dataset_path, limit=None, output_prefix="evaluation"):
 if __name__ == "__main__":
     # 配置参数
     dataset_path = "./evaluation_dataset.json"
-    sample_limit = 10  # 设置为None可评估整个数据集
+    sample_limit = 100  # 设置为None可评估整个数据集
     
     # 运行评估
     asyncio.run(run_evaluation(dataset_path, sample_limit))

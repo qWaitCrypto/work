@@ -150,7 +150,7 @@ def simulate_concurrent_users(questions_list, num_users=None):
 if __name__ == "__main__":
     backend = sgl.OpenAI(
         model_name="default",
-        base_url="http://122.191.109.151:1094/v1",
+        base_url="http://122.191.109.151:1112/v1",
         api_key="empty",
     )
     sgl.set_default_backend(backend)
@@ -190,6 +190,6 @@ if __name__ == "__main__":
     # single()
     
     # 模拟指定数量的用户同时发送请求
-    num_concurrent_users = 10  # 可以根据需要修改
+    num_concurrent_users = 100  # 可以根据需要修改
     print(f"\n========== 模拟{num_concurrent_users}个用户同时发送请求 ==========\n")
     simulate_concurrent_users(all_questions, num_concurrent_users)
