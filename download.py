@@ -18,14 +18,12 @@ MAX_TOKENS = 256
 # 加载数据集（只保留事实问答 & 语言任务）
 mmlu = load_dataset('lukaemon/mmlu', 'high_school_world_history', split='test', trust_remote_code=True)  # 事实问答
 cmrc = load_dataset('cmrc2018', split='validation')  # 中文阅读理解
-
 # 过滤数据，确保答案在 256 tokens 以内
 def filter_by_token_length(data, question_key, answer_key, category, dataset_name):
     filtered_data = []
     for idx, item in enumerate(data):
         question = item.get(question_key, "").strip()
         answer = item.get(answer_key, "")
-
         # 处理答案为空的情况
         if answer is None:
             continue
@@ -63,10 +61,10 @@ filtered_cmrc = filter_by_token_length(cmrc, "question", "answers", "reading", "
 
 # 数据集任务分布（只保留 fact 和 reading）
 category_distribution = {
-    "fact": 500,
-    "reading": 500
+    "fact": 0,
+    "reading": 1000
 }
-
+print(len(filtered_mmlu), len(filtered_cmrc))
 # 随机采样
 final_dataset = (
     random.sample(filtered_mmlu, category_distribution["fact"]) +
