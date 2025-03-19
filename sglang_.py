@@ -149,7 +149,7 @@ def evaluate_long_context():
 if __name__ == "__main__":
     backend = sgl.OpenAI(
         model_name="deepseek-chat",
-        base_url="http://122.191.109.151:1112/v1/",
+        base_url="http://10.200.3.30:22/v1/",
         api_key="sk-f267b40f68fe47fbba06d9534b988214",
     )
     sgl.set_default_backend(backend)
