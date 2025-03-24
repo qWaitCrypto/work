@@ -303,8 +303,8 @@ class ChatSession:
         import json
 
         try:
-            llm_response = llm_response.split("</think>")[0]
-            tool_call = json.loads(llm_response)
+            llm_responses = llm_response.split("</think>")[0]
+            tool_call = json.loads(llm_responses)
             if "tool" in tool_call and "arguments" in tool_call:
                 logging.info(f"Executing tool: {tool_call['tool']}")
                 logging.info(f"With arguments: {tool_call['arguments']}")

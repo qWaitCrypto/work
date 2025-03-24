@@ -27,8 +27,6 @@ from mcp.client.sse import sse_client
 from openai import OpenAI
 from dotenv import load_dotenv
 
-load_dotenv()  # 从.env文件加载环境变量（如API密钥）
-
 # 初始化OpenAI客户端
 client = OpenAI(
     base_url="http://10.200.3.30:30000/v1/",  # 本地LLM服务地址
@@ -253,7 +251,7 @@ async def main():
     if len(sys.argv) < 3:
         print("用法: python client.py <stdio/sse> <服务器路径>")
         sys.exit(1)
-
+    print(1111)
     transport = sys.argv[1]  # 连接方式
     server_path = sys.argv[2]
 

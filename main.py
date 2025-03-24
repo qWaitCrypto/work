@@ -7,7 +7,7 @@ import requests
 client = OpenAI(
     # 若没有配置环境变量，请用百炼API Key将下行替换为：api_key="sk-xxx"
     api_key="11111",
-    base_url="http://122.191.109.151:1112/v1",
+    base_url="None",
 )
 
 def encode_image_from_url(image_url):
