@@ -31,7 +31,7 @@ load_dotenv()  # 从.env文件加载环境变量（如API密钥）
 
 # 初始化OpenAI客户端
 client = OpenAI(
-    base_url="http://122.191.109.151:1112/v1/",  # 本地LLM服务地址
+    base_url="http://10.200.3.30:30000/v1/",  # 本地LLM服务地址
     api_key="sk-f267b40f68fe47fbba06d9534b988214",  # API密钥
 )
 
@@ -55,7 +55,7 @@ class MCPClient:
         self.exit_stack = AsyncExitStack()  # 异步退出栈，用于管理异步资源
         self.messages: List[Dict[str, Any]] = []  # 对话历史记录
         self.tools: List[Dict[str, Any]] = []  # 可用工具列表
-        self.sse_url: str = "http://127.0.0.1:8000/sse"
+        self.sse_url: str = None
         # 添加系统提示词
         self.messages.append({
             "role": "system",
@@ -89,6 +89,7 @@ class MCPClient:
             self.session = await self.exit_stack.enter_async_context(ClientSession(self.stdio, self.write))
 
         if(self.transport=='sse'):
+            self.sse_url = server_script_path
             sse_transport = await self.exit_stack.enter_async_context(sse_client(self.sse_url))
             self.sse, self.write = sse_transport
             self.session = await self.exit_stack.enter_async_context(ClientSession(self.sse, self.write))
@@ -128,7 +129,7 @@ class MCPClient:
 
         # 调用本地LLM
         response = client.chat.completions.create(
-            model="./qwq",  # 使用QwQ模型
+            model="qwq",  # 使用QwQ模型
             messages=self.messages,
             temperature=0.1,
             top_p=0.95,
@@ -152,7 +153,7 @@ class MCPClient:
             "role": "assistant",
             "content": original_content
         })
-        print(assistant_message.tool_calls)
+        # print(assistant_message.tool_calls)
         # 检查是否有工具调用
         if assistant_message.tool_calls:
             for tool_call in assistant_message.tool_calls:
@@ -177,7 +178,7 @@ class MCPClient:
 
                 # 调用工具并获取结果
                 tool_result = await self.session.call_tool(tool_name, tool_args)
-                print("Tool result:", tool_result)  # 添加调试输出
+                # print("Tool result:", tool_result)  # 添加调试输出
                 
                 # 添加工具结果到消息历史
                 self.messages.append({
@@ -188,7 +189,7 @@ class MCPClient:
 
                 # 让LLM处理工具调用结果
                 final_response = client.chat.completions.create(
-                    model="./qwq",
+                    model="qwq",
                     messages=self.messages,
                     temperature=0.1,
                     top_p=0.95,

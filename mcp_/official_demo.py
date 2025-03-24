@@ -234,7 +234,7 @@ class LLMClient:
         Raises:
             httpx.RequestError: If the request to the LLM fails.
         """
-        url = "http://122.191.109.151:1112/v1/chat/completions"
+        url = "http://10.200.3.30:30000/v1/chat/completions"
 
         headers = {
             "Content-Type": "application/json",
@@ -242,7 +242,7 @@ class LLMClient:
         }
         payload = {
             "messages": messages,
-            "model": "qwen-vl-72b",
+            "model": "qwq",
             "temperature": 0.7,
             "max_tokens": 4096,
             "top_p": 1,
@@ -284,7 +284,7 @@ class ChatSession:
         cleanup_tasks = []
         for server in self.servers:
             cleanup_tasks.append(asyncio.create_task(server.cleanup()))
-
+        # print(cleanup_tasks)
         if cleanup_tasks:
             try:
                 await asyncio.gather(*cleanup_tasks, return_exceptions=True)
@@ -303,6 +303,7 @@ class ChatSession:
         import json
 
         try:
+            llm_response = llm_response.split("</think>")[0]
             tool_call = json.loads(llm_response)
             if "tool" in tool_call and "arguments" in tool_call:
                 logging.info(f"Executing tool: {tool_call['tool']}")
@@ -310,6 +311,7 @@ class ChatSession:
 
                 for server in self.servers:
                     tools = await server.list_tools()
+                    # print(server, tools)
                     if any(tool.name == tool_call["tool"] for tool in tools):
                         try:
                             result = await server.execute_tool(
@@ -350,10 +352,10 @@ class ChatSession:
             all_tools = []
             for server in self.servers:
                 tools = await server.list_tools()
+                # print(server, tools)
                 all_tools.extend(tools)
             # print(all_tools)
             tools_description = "\n".join([tool.format_for_llm() for tool in all_tools])
-
             system_message = (
                 "You are a helpful assistant with access to these tools:\n\n"
                 f"{tools_description}\n"
@@ -373,7 +375,7 @@ class ChatSession:
                 "3. Focus on the most relevant information\n"
                 "4. Use appropriate context from the user's question\n"
                 "5. Avoid simply repeating the raw data\n\n"
-                "Please use only the tools that are explicitly defined above."
+                "Please use only the tools that are explicitly defined above.Please give the conclusion directly, do not show the thinking process, and do not output Think, thinking content, reasoning content, etc."
             )
 
             messages = [{"role": "system", "content": system_message}]
@@ -420,6 +422,7 @@ async def main() -> None:
         Server(name, srv_config)
         for name, srv_config in server_config["mcpServers"].items()
     ]
+    # print(servers)
     llm_client = LLMClient('111')
     chat_session = ChatSession(servers, llm_client)
     await chat_session.start()

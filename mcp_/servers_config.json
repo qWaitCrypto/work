@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "pipx_": {
+      "command": "pipx",
+      "args": ["run", "--spec", "./work", "mcp_server"]
+    }
+  }
+}

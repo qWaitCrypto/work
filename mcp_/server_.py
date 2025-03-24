@@ -421,85 +421,89 @@ def scan_path(path: str = ".", file_types: list[str] = None, recursive: bool = T
     except Exception as e:
         return f"扫描路径时发生错误: {str(e)}"
 
-# @mcp.tool()
-# async def analyze_image(image_url: str, task: str = "描述这张图片", detail_level: str = "normal") -> str:
-#     """分析图片内容。
-#
-#     使用Qwen-VL模型分析图片内容，支持多种分析任务和详细程度。
-#
-#     参数:
-#         image_url: 图片的URL地址或本地文件路径
-#         task: 分析任务类型，可选值：
-#             - "描述这张图片"：生成图片描述
-#             - "识别物体"：识别图片中的主要物体
-#             - "分析场景"：分析图片场景和环境
-#             - "提取文字"：提取图片中的文字（OCR）
-#             - "分析人物"：分析图片中的人物特征
-#             - "分析颜色"：分析图片的主要颜色
-#             - "分析构图"：分析图片的构图方式
-#         detail_level: 分析的详细程度，可选值：
-#             - "simple"：简单描述
-#             - "normal"：正常描述
-#             - "detailed"：详细描述
-#
-#     返回:
-#         分析结果的字符串，如果分析失败则返回错误信息
-#     """
-#     try:
-#         # 验证任务类型
-#         valid_tasks = {
-#             "描述这张图片": "请详细描述这张图片的内容",
-#             "识别物体": "请识别并列出这张图片中的主要物体",
-#             "分析场景": "请分析这张图片的场景和环境",
-#             "提取文字": "请提取这张图片中的文字内容",
-#             "分析人物": "请分析这张图片中的人物特征",
-#             "分析颜色": "请分析这张图片的主要颜色",
-#             "分析构图": "请分析这张图片的构图方式"
-#         }
-#
-#         if task not in valid_tasks:
-#             return f"错误：不支持的任务类型 '{task}'。\n支持的任务类型：{', '.join(valid_tasks.keys())}"
-#
-#         # 验证详细程度
-#         valid_levels = {
-#             "simple": "请用简单的话",
-#             "normal": "请用正常详细程度",
-#             "detailed": "请用非常详细的方式"
-#         }
-#
-#         if detail_level not in valid_levels:
-#             return f"错误：不支持的详细程度 '{detail_level}'。\n支持的详细程度：{', '.join(valid_levels.keys())}"
-#
-#         # 构建提示词
-#         prompt = f"{valid_levels[detail_level]} {valid_tasks[task]}"
-#
-#         # 构建消息
-#         messages = [
-#             {"role": "user", "content": [
-#                 {"type": "text", "text": prompt},
-#                 {"type": "image_url", "image_url": {"url": image_url}}
-#             ]}
-#         ]
-#
-#         # 调用Qwen-VL模型
-#         response = client.chat.completions.create(
-#             model="qwen-vl",
-#             messages=messages,
-#             temperature=0.1,
-#             max_tokens=1024
-#         )
-#
-#         # 检查响应
-#         if not response or not response.choices:
-#             return "错误：模型返回结果为空"
-#
-#         # 返回分析结果
-#         return response.choices[0].message.content
-#
-#     except Exception as e:
-#         return f"分析图片时发生错误: {str(e)}"
+@mcp.tool()
+async def analyze_image(image_url: str, task: str = "描述这张图片", detail_level: str = "normal") -> str:
+    """分析图片内容。
+
+    使用Qwen-VL模型分析图片内容，支持多种分析任务和详细程度。
+
+    参数:
+        image_url: 图片的URL地址或本地文件路径
+        task: 分析任务类型，可选值：
+            - "描述这张图片"：生成图片描述
+            - "识别物体"：识别图片中的主要物体
+            - "分析场景"：分析图片场景和环境
+            - "提取文字"：提取图片中的文字（OCR）
+            - "分析人物"：分析图片中的人物特征
+            - "分析颜色"：分析图片的主要颜色
+            - "分析构图"：分析图片的构图方式
+        detail_level: 分析的详细程度，可选值：
+            - "simple"：简单描述
+            - "normal"：正常描述
+            - "detailed"：详细描述
+
+    返回:
+        分析结果的字符串，如果分析失败则返回错误信息
+    """
+    try:
+        # 验证任务类型
+        valid_tasks = {
+            "描述这张图片": "请详细描述这张图片的内容",
+            "识别物体": "请识别并列出这张图片中的主要物体",
+            "分析场景": "请分析这张图片的场景和环境",
+            "提取文字": "请提取这张图片中的文字内容",
+            "分析人物": "请分析这张图片中的人物特征",
+            "分析颜色": "请分析这张图片的主要颜色",
+            "分析构图": "请分析这张图片的构图方式"
+        }
+
+        if task not in valid_tasks:
+            return f"错误：不支持的任务类型 '{task}'。\n支持的任务类型：{', '.join(valid_tasks.keys())}"
+
+        # 验证详细程度
+        valid_levels = {
+            "simple": "请用简单的话",
+            "normal": "请用正常详细程度",
+            "detailed": "请用非常详细的方式"
+        }
+
+        if detail_level not in valid_levels:
+            return f"错误：不支持的详细程度 '{detail_level}'。\n支持的详细程度：{', '.join(valid_levels.keys())}"
+
+        # 构建提示词
+        prompt = f"{valid_levels[detail_level]} {valid_tasks[task]}"
+
+        # 构建消息
+        messages = [
+            {"role": "user", "content": [
+                {"type": "text", "text": prompt},
+                {"type": "image_url", "image_url": {"url": image_url}}
+            ]}
+        ]
+
+        # 调用Qwen-VL模型
+        response = client.chat.completions.create(
+            model="qwen-vl",
+            messages=messages,
+            temperature=0.1,
+            max_tokens=1024
+        )
+
+        # 检查响应
+        if not response or not response.choices:
+            return "错误：模型返回结果为空"
+
+        # 返回分析结果
+        return response.choices[0].message.content
+
+    except Exception as e:
+        return f"分析图片时发生错误: {str(e)}"
+
+def main():
+    print("成功")
+    mcp.run(transport='stdio')
 
 if __name__ == "__main__":
     # 当脚本直接运行（而非导入）时执行此代码块
     # 初始化并运行服务器，使用stdio传输进行通信
-    mcp.run(transport='sse')
+    mcp.run(transport='stdio')
