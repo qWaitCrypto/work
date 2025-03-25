@@ -1,41 +1,49 @@
-from openai import OpenAI
+from pydantic import BaseModel, Field
+import openai
 import os
-import base64
-import requests
+from sglang.test.test_utils import is_in_ci
+
+from sglang.utils import launch_server_cmd
+
+from sglang.utils import wait_for_server, print_highlight, terminate_process
+
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 
-client = OpenAI(
-    # 若没有配置环境变量，请用百炼API Key将下行替换为：api_key="sk-xxx"
-    api_key="11111",
-    base_url="None",
+server_process, port = launch_server_cmd(
+    "python -m sglang.launch_server --model-path meta-llama/Meta-Llama-3.1-8B-Instruct --host 0.0.0.0"
 )
 
-def encode_image_from_url(image_url):
-    response = requests.get(image_url)
-    if response.status_code != 200:
-        raise Exception("无法下载图片")
-    return base64.b64encode(response.content).decode("utf-8")
+# wait_for_server(f"http://localhost:{port}")
+client = openai.Client(base_url=f"http://10.200.3.30:30000/v1", api_key="None")
 
-image_base64 = encode_image_from_url("https://help-static-aliyun-doc.aliyuncs.com/file-manage-files/zh-CN/20241022/emyrja/dog_and_girl.jpeg")
+# Define the schema using Pydantic
+class CapitalInfo(BaseModel):
+    name: str = Field(..., pattern=r"^\w+$", description="Name of the capital city")
+    population: int = Field(..., description="Population of the capital city")
 
-completion = client.chat.completions.create(
-    model="qwen-vl-7b",
+
+response = client.chat.completions.create(
+    model="meta-llama/Meta-Llama-3.1-8B-Instruct",
     messages=[
-        {"role": "system",
-         "content": [{"type": "text", "text": "You are a helpful assistant."}]},
-        {"role": "user",
-         "content": [{"type": "image_base64", "image_base64": image_base64},
-                     {"type": "text", "text": "图中描绘的是什么景象？"}]}
+        {
+            "role": "user",
+            "content": "Please generate the information of the capital of china in the JSON format.",
+        },
     ],
-    stream=True
+    temperature=0,
+    max_tokens=128,
+    response_format={
+        "type": "json_schema",
+        "json_schema": {
+            "name": "foo",
+            # convert the pydantic model to json schema
+            "schema": CapitalInfo.model_json_schema(),
+        },
+    },
 )
 
-full_content = ""
-print("流式输出内容为：")
-for chunk in completion:
-    if chunk.choices[0].delta.content is None:
-        continue
-    full_content += chunk.choices[0].delta.content
-    print(chunk.choices[0].delta.content)
-
-print(f"完整内容为：{full_content}")
+response_content = response.choices[0].message.content
+# validate the JSON response by the pydantic model
+capital_info = CapitalInfo.model_validate_json(response_content)
+print_highlight(f"Validated response: {capital_info.model_dump_json()}")

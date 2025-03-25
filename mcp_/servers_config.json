@@ -2,15 +2,7 @@
   "mcpServers": {
     "demo": {
       "command": "python",
-      "args": ["server_.py"]
-    },
-    "playwright": {
-      "command": "python",
-      "args": ["browser.py"]
-    },
-    "pipx_": {
-      "command": "pipx",
-      "args": ["run", "--spec", "git+https://github.com/qWaitCrypto/work.git", "mcp_server"]
+      "args": ["Server.py"]
     }
   }
 }

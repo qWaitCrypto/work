@@ -143,6 +143,7 @@ class MCPClient:
         
         # 保存原始回复内容
         original_content = assistant_message.content or ""
+        print(original_content, 'aaaaaaa')
         if(original_content != ""):
             print("\n" + original_content)
         
@@ -176,7 +177,7 @@ class MCPClient:
 
                 # 调用工具并获取结果
                 tool_result = await self.session.call_tool(tool_name, tool_args)
-                # print("Tool result:", tool_result)  # 添加调试输出
+                print("Tool result:", tool_result)  # 添加调试输出
                 
                 # 添加工具结果到消息历史
                 self.messages.append({

@@ -170,12 +170,6 @@ def add(a: int, b: int) -> int:
     return a + b
 
 
-# Add a dynamic greeting resource
-@mcp.resource("greeting://{name}")
-def get_greeting(name: str) -> str:
-    """Get a personalized greeting"""
-    return f"Hello, {name}!"
-
 def clean_html_content(html_content: str) -> str:
     """清理HTML内容，提取有用的文本信息。
     
