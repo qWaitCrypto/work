@@ -82,7 +82,6 @@ class Server:
         )
         if command is None:
             raise ValueError("The command must be a valid string and cannot be None.")
-
         server_params = StdioServerParameters(
             command=command,
             args=self.config["args"],
@@ -90,6 +89,7 @@ class Server:
             if self.config.get("env")
             else None,
         )
+        # print(server_params)
         try:
             stdio_transport = await self.exit_stack.enter_async_context(
                 stdio_client(server_params)
@@ -343,18 +343,21 @@ class ChatSession:
         try:
             for server in self.servers:
                 try:
+                    # print("121412")
                     await server.initialize()
+                    # print("121412")
                 except Exception as e:
                     logging.error(f"Failed to initialize server: {e}")
                     await self.cleanup_servers()
                     return
 
             all_tools = []
+            # print(all_tools)
             for server in self.servers:
                 tools = await server.list_tools()
                 # print(server, tools)
                 all_tools.extend(tools)
-            # print(all_tools)
+            print(all_tools)
             tools_description = "\n".join([tool.format_for_llm() for tool in all_tools])
             system_message = (
                 "You are a helpful assistant with access to these tools:\n\n"
@@ -422,7 +425,7 @@ async def main() -> None:
         Server(name, srv_config)
         for name, srv_config in server_config["mcpServers"].items()
     ]
-    # print(servers)
+
     llm_client = LLMClient('111')
     chat_session = ChatSession(servers, llm_client)
     await chat_session.start()

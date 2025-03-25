@@ -1,8 +1,5 @@
 import asyncio
-import os
-import inspect
-import sys
-from pathlib import Path
+
 from typing import Dict, List, Any, Union, Type
 
 from mcp.server.models import InitializationOptions
@@ -11,7 +8,15 @@ from mcp.server import NotificationOptions, Server
 from pydantic import AnyUrl
 import mcp.server.stdio
 import mcp.server.sse
-from core.registry import registered_tools, tool_handlers, ToolHandler, register_tool
+from mcp_.core.registry import registered_tools, tool_handlers, ToolHandler, register_tool
+import sys
+from pathlib import Path
+
+current_dir = Path(__file__).resolve().parent
+parent_dir = current_dir.parent
+
+sys.path.insert(0, str(current_dir))
+sys.path.insert(0, str(parent_dir))
 
 # 创建MCP服务器
 server = Server("modular-tool-server")
@@ -85,6 +90,7 @@ def discover_tools(tools_dir='tools'):
                         register_tool(item)
             
             # 在加载模块后，打印当前已注册的工具数量
+            # print(len(registered_tools))
             print(f"当前已注册 {len(registered_tools)} 个工具: {', '.join(registered_tools.keys())}")
             
         except Exception as e:
@@ -182,6 +188,20 @@ async def main():
             ),
         )
 
-# 当作为独立脚本运行时
+def run_server_sync():
+    """同步方式运行服务器，包装异步入口"""
+    try:
+        loop = asyncio.get_event_loop()
+        if loop.is_running():
+            # 如果是在Jupyter或嵌套事件循环中运行
+            import nest_asyncio
+            nest_asyncio.apply()
+            loop.run_until_complete(main())
+        else:
+            loop.run_until_complete(main())
+    except RuntimeError:
+        asyncio.run(main())
+
 if __name__ == "__main__":
-    asyncio.run(main())
+    run_server_sync()
+

@@ -14,7 +14,7 @@ if str(root_dir) not in sys.path:
 
 import mcp.types as types
 from typing import List, Union, Dict, Any
-from core.registry import register_tool, ToolHandler, registered_tools, tool_handlers
+from mcp_.core.registry import register_tool, ToolHandler, registered_tools, tool_handlers
 
 print(f"[calculator_tool] 导入时，当前已注册工具: {registered_tools.keys()}")
 

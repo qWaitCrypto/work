@@ -8,7 +8,7 @@ import re
 import base64
 from playwright.async_api import async_playwright
 from bs4 import BeautifulSoup
-from core.registry import register_tool, ToolHandler, registered_tools, tool_handlers
+from mcp_.core.registry import register_tool, ToolHandler, registered_tools, tool_handlers
 
 
 @register_tool

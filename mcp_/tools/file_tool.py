@@ -6,7 +6,7 @@ import mcp.types as types
 from typing import List, Union, Dict, Any
 import os
 import chardet
-from core.registry import register_tool, ToolHandler, registered_tools, tool_handlers
+from mcp_.core.registry import register_tool, ToolHandler, registered_tools, tool_handlers
 
 @register_tool
 class ReadFileToolHandler(ToolHandler):

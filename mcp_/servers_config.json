@@ -1,6 +1,9 @@
 {
-  "pipx_": {
-    "command": "pipx",
-    "args": ["run", "--spec", "git+https://github.com/qWaitCrypto/work.git", "mcp_server"]
+  "mcpServers": {
+    "demo": {
+      "command": "pipx",
+      "args": ["run", "--spec", "E://work", "mcp_server"]
+    }
   }
 }
+

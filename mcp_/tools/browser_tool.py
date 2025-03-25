@@ -9,7 +9,7 @@ import base64
 import mcp.types as types
 from typing import List, Union, Dict, Any
 from playwright.async_api import async_playwright
-from core.registry import register_tool, ToolHandler, registered_tools, tool_handlers
+from mcp_.core.registry import register_tool, ToolHandler, registered_tools, tool_handlers
 
 # 全局共享会话状态 - 模块级变量
 _sessions = {}

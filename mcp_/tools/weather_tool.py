@@ -8,7 +8,7 @@ import httpx
 import json
 import re
 from datetime import datetime
-from core.registry import register_tool, ToolHandler, registered_tools, tool_handlers
+from mcp_.core.registry import register_tool, ToolHandler, registered_tools, tool_handlers
 
 
 # 常量定义
