@@ -1,8 +1,6 @@
 {
-  "mcpServers": {
-    "demo": {
-      "command": "python",
-      "args": ["Server.py"]
-    }
+  "pipx_": {
+    "command": "pipx",
+    "args": ["run", "--spec", "git+https://github.com/qWaitCrypto/work.git", "mcp_server"]
   }
 }

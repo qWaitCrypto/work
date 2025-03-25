@@ -14,7 +14,7 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "mcp_server = mcp_.server_:main"
+            "mcp_server = mcp_.Server:main"
         ]
     }
 )
