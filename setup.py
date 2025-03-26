@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 setup(
     name="mcp_server",
     version="0.1",
-    packages=find_packages(),
+    packages=find_packages(include=["mcp_", "mcp_.*"]),
     install_requires=[
         "httpx",
         "playwright",
